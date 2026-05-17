@@ -1,9 +1,0 @@
-streamlit==1.29.0
-yfinance==0.2.33
-plotly==5.18.0
-pandas==2.1.3
-numpy==1.26.2
-scikit-learn==1.3.2        # or tensorflow, torch
-streamlit-webrtc==0.45.1
-av==10.0.0                 # needed for webrtc
-python-dotenv==1.0.0
