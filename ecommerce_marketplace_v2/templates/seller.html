@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% block content %}
+<h2>Seller Dashboard</h2>
+<form method="post" enctype="multipart/form-data">
+<input name="name" placeholder="Product Name" required>
+<textarea name="description" placeholder="Description"></textarea>
+<input name="category" placeholder="Category">
+<input name="price" type="number" step="0.01" placeholder="Price" required>
+<input name="image" type="file">
+<button type="submit">Submit Product</button>
+</form>
+<h3>Your Products</h3>
+{% for p in products %}
+<div class="card">{{p.name}} - {% if p.approved %}Approved{% else %}Pending Approval{% endif %}</div>
+{% endfor %}
+{% endblock %}

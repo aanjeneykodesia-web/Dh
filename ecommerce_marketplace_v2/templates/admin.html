@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block content %}
+<h2>Admin Dashboard</h2>
+<div class="card">Users: {{users}} | Products: {{products}} | Orders: {{orders}}</div>
+<h3>Pending Products</h3>
+{% for p in pending %}
+<div class="card">{{p.name}} <a href="/approve/{{p.id}}">Approve</a></div>
+{% else %}
+<p>No pending products.</p>
+{% endfor %}
+{% endblock %}

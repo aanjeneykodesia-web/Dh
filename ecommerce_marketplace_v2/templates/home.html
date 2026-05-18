@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% block content %}
+<h2>Products</h2>
+{% for p in products %}
+<div class="card">
+<h3>{{p.name}}</h3>
+<p>₹{{'%.2f'|format(p.price)}} | {{p.category}}</p>
+<p>{{p.description}}</p>
+<a href="/add-to-cart/{{p.id}}">Add to Cart</a>
+</div>
+{% else %}
+<p>No approved products yet.</p>
+{% endfor %}
+{% endblock %}
