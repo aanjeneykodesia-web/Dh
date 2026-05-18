@@ -5,7 +5,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+app = Flask(__name__, instance_path="/tmp/instance")
 app.config['SECRET_KEY'] = 'change-this-secret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace.db'
 app.config['UPLOAD_FOLDER'] = 'uploads'
