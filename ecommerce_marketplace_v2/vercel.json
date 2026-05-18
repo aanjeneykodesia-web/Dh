@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "ecommerce_marketplace_v2/app.py",
+      "src": "app.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "ecommerce_marketplace_v2/app.py"
+      "dest": "app.py"
     }
   ]
 }
