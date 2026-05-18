@@ -1,0 +1,1 @@
+# E-Commerce Marketplace\n\npip install -r requirements.txt\npython app.py\n

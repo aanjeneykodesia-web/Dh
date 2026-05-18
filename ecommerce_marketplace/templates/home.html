@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}
+<h2>Buyer Store</h2>
+{% for p in products %}<div class="card"><h3>{{ p.name }}</h3><p>₹{{ p.price }}</p><p>Seller: {{ p.seller }}</p></div>{% endfor %}
+{% endblock %}
