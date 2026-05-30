@@ -1,0 +1,1335 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: TradeRoute B2B marketplace API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: products
+  - name: orders
+  - name: shipments
+  - name: users
+  - name: dashboard
+  - name: messages
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user (or null)
+      responses:
+        "200":
+          description: Current user state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthState"
+  /auth/login:
+    post:
+      operationId: devLogin
+      tags: [auth]
+      summary: Dev login as a role (demo authentication)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+  /auth/demo-accounts:
+    get:
+      operationId: listDemoAccounts
+      tags: [auth]
+      summary: List preset demo accounts to log in with
+      responses:
+        "200":
+          description: Demo accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DemoAccount"
+  /auth/check-phone:
+    post:
+      operationId: checkPhone
+      tags: [auth]
+      summary: Check whether a phone number has an account and whether it has a password set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckPhoneInput"
+      responses:
+        "200":
+          description: Phone status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckPhoneResult"
+  /auth/login-phone:
+    post:
+      operationId: loginWithPhone
+      tags: [auth]
+      summary: Sign in with phone number + password (for users who completed signup)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginPhoneInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/signup:
+    post:
+      operationId: signupWithPhone
+      tags: [auth]
+      summary: Create a new account using a verified phone OTP plus profile details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupInput"
+      responses:
+        "200":
+          description: Account created and logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products visible to the caller
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: manufacturerId
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product (manufacturer only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductInput"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /products/categories:
+    get:
+      operationId: listProductCategories
+      tags: [products]
+      summary: List product categories with counts
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryCount"
+  /products/{productId}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /products/{productId}/platform-price:
+    patch:
+      operationId: setProductPlatformPrice
+      tags: [products]
+      summary: Admin — override the shopkeeper-facing price for a product
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetPlatformPriceInput"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List orders relevant to the caller
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Place an order (shopkeeper)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderInput"
+      responses:
+        "200":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+  /orders/{orderId}/status:
+    post:
+      operationId: updateOrderStatus
+      tags: [orders]
+      summary: Manufacturer accepts/rejects/confirms an order
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderStatusInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+  /orders/{orderId}/assign-transporter:
+    post:
+      operationId: assignTransporter
+      tags: [orders]
+      summary: Manufacturer or admin assigns a transporter to an accepted order
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignTransporterInput"
+      responses:
+        "200":
+          description: Shipment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+
+  /orders/{orderId}/messages:
+    get:
+      operationId: listOrderMessages
+      tags: [messages]
+      summary: List chat messages on an order thread
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderMessage"
+    post:
+      operationId: sendOrderMessage
+      tags: [messages]
+      summary: Post a chat message on an order thread
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOrderMessageInput"
+      responses:
+        "200":
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderMessage"
+
+  /shipments:
+    get:
+      operationId: listShipments
+      tags: [shipments]
+      summary: List shipments relevant to the caller
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Shipments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Shipment"
+  /shipments/{shipmentId}:
+    get:
+      operationId: getShipment
+      tags: [shipments]
+      parameters:
+        - in: path
+          name: shipmentId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Shipment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+  /shipments/{shipmentId}/status:
+    post:
+      operationId: updateShipmentStatus
+      tags: [shipments]
+      summary: Transporter updates shipment status
+      parameters:
+        - in: path
+          name: shipmentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateShipmentStatusInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+  /shipments/{shipmentId}/location:
+    post:
+      operationId: updateShipmentLocation
+      tags: [shipments]
+      summary: Transporter updates current GPS location of the shipment
+      parameters:
+        - in: path
+          name: shipmentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLocationInput"
+      responses:
+        "200":
+          description: Location updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: Admin — list all users
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+  /users/{userId}/role:
+    post:
+      operationId: updateUserRole
+      tags: [users]
+      summary: Admin — change a user's role
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRoleInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/transporters:
+    get:
+      operationId: listTransporters
+      tags: [users]
+      summary: List transporters available for assignment
+      responses:
+        "200":
+          description: Transporters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/me/payment:
+    patch:
+      operationId: updatePaymentCredentials
+      tags: [users]
+      summary: Update own payment credentials (manufacturer / any seller)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePaymentInput"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Role-aware dashboard summary
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Recent activity feed for the current user
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEvent"
+  /dashboard/top-products:
+    get:
+      operationId: getTopProducts
+      tags: [dashboard]
+      summary: Top selling products (by quantity)
+      responses:
+        "200":
+          description: Top products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopProduct"
+  /dashboard/admin-overview:
+    get:
+      operationId: getAdminOverview
+      tags: [dashboard]
+      summary: Admin platform overview (totals + breakdowns)
+      responses:
+        "200":
+          description: Admin overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+
+    Role:
+      type: string
+      enum: [shopkeeper, manufacturer, transporter, admin]
+
+    IdProofType:
+      type: string
+      enum: [aadhaar, pan, passport, drivers_license, voter_id]
+
+    User:
+      type: object
+      required: [id, name, email, role, companyName, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+        companyName:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        idProofType:
+          $ref: "#/components/schemas/IdProofType"
+          nullable: true
+        idProofNumber:
+          type: string
+          nullable: true
+        gstin:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+        upiId:
+          type: string
+          nullable: true
+        bankAccount:
+          type: string
+          nullable: true
+        bankIfsc:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthState:
+      type: object
+      required: [authenticated]
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+          nullable: true
+
+    LoginInput:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+
+    DemoAccount:
+      type: object
+      required: [id, name, role, companyName, description]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+        companyName:
+          type: string
+        description:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+
+    CheckPhoneInput:
+      type: object
+      required: [phoneNumber]
+      properties:
+        phoneNumber:
+          type: string
+          minLength: 7
+          maxLength: 20
+
+    CheckPhoneResult:
+      type: object
+      required: [phoneNumber, signupRequired, hasPassword]
+      properties:
+        phoneNumber:
+          type: string
+        signupRequired:
+          type: boolean
+          description: True if no user exists with this phone yet.
+        hasPassword:
+          type: boolean
+          description: True if the existing user already has a password set.
+
+    LoginPhoneInput:
+      type: object
+      required: [phoneNumber, password]
+      properties:
+        phoneNumber:
+          type: string
+        password:
+          type: string
+          minLength: 6
+
+    SignupInput:
+      type: object
+      required:
+        - phoneNumber
+        - name
+        - role
+        - companyName
+        - idProofType
+        - idProofNumber
+        - gstin
+        - password
+      properties:
+        phoneNumber:
+          type: string
+        name:
+          type: string
+          minLength: 2
+        role:
+          $ref: "#/components/schemas/Role"
+        companyName:
+          type: string
+          minLength: 2
+        idProofType:
+          $ref: "#/components/schemas/IdProofType"
+        idProofNumber:
+          type: string
+          minLength: 4
+          maxLength: 32
+        gstin:
+          type: string
+          minLength: 15
+          maxLength: 15
+        password:
+          type: string
+          minLength: 6
+        city:
+          type: string
+          nullable: true
+
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - category
+        - unit
+        - pricePerUnit
+        - minOrderQty
+        - stockQty
+        - manufacturerId
+        - manufacturerName
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        unit:
+          type: string
+        pricePerUnit:
+          type: number
+        platformPrice:
+          type: number
+          nullable: true
+        minOrderQty:
+          type: integer
+        stockQty:
+          type: integer
+        imageUrl:
+          type: string
+          nullable: true
+        manufacturerId:
+          type: string
+        manufacturerName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SetPlatformPriceInput:
+      type: object
+      properties:
+        platformPrice:
+          type: number
+          nullable: true
+
+    CreateProductInput:
+      type: object
+      required: [name, description, category, unit, pricePerUnit, minOrderQty, stockQty]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        unit:
+          type: string
+        pricePerUnit:
+          type: number
+        minOrderQty:
+          type: integer
+        stockQty:
+          type: integer
+        imageUrl:
+          type: string
+          nullable: true
+
+    UpdateProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        unit:
+          type: string
+        pricePerUnit:
+          type: number
+        minOrderQty:
+          type: integer
+        stockQty:
+          type: integer
+        imageUrl:
+          type: string
+          nullable: true
+
+    CategoryCount:
+      type: object
+      required: [category, count]
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+
+    OrderStatus:
+      type: string
+      enum: [pending, accepted, rejected, in_transit, delivered, cancelled]
+
+    OrderItem:
+      type: object
+      required: [productId, productName, quantity, pricePerUnit, lineTotal]
+      properties:
+        productId:
+          type: string
+        productName:
+          type: string
+        quantity:
+          type: integer
+        pricePerUnit:
+          type: number
+        lineTotal:
+          type: number
+
+    Order:
+      type: object
+      required:
+        - id
+        - orderNumber
+        - status
+        - shopkeeperId
+        - shopkeeperName
+        - shopkeeperCompany
+        - manufacturerId
+        - manufacturerName
+        - items
+        - totalAmount
+        - shippingAddress
+        - createdAt
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        shopkeeperId:
+          type: string
+        shopkeeperName:
+          type: string
+        shopkeeperCompany:
+          type: string
+        manufacturerId:
+          type: string
+        manufacturerName:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        totalAmount:
+          type: number
+        shippingAddress:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        shopkeeperPhone:
+          type: string
+          nullable: true
+        manufacturerPhone:
+          type: string
+          nullable: true
+        shipment:
+          $ref: "#/components/schemas/Shipment"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateOrderItemInput:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+
+    CreateOrderInput:
+      type: object
+      required: [items, shippingAddress]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateOrderItemInput"
+        shippingAddress:
+          type: string
+        notes:
+          type: string
+          nullable: true
+
+    UpdateOrderStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [accepted, rejected, cancelled]
+        reason:
+          type: string
+          nullable: true
+
+    AssignTransporterInput:
+      type: object
+      required: [transporterId]
+      properties:
+        transporterId:
+          type: string
+        pickupDate:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    OrderMessage:
+      type: object
+      required: [id, orderId, senderId, senderName, senderRole, body, createdAt]
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        senderId:
+          type: string
+        senderName:
+          type: string
+        senderCompany:
+          type: string
+          nullable: true
+        senderRole:
+          $ref: "#/components/schemas/Role"
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SendOrderMessageInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    UpdateUserRoleInput:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: "#/components/schemas/Role"
+
+    ShipmentStatus:
+      type: string
+      enum: [assigned, picked_up, in_transit, delivered]
+
+    Shipment:
+      type: object
+      required:
+        - id
+        - trackingNumber
+        - status
+        - orderId
+        - orderNumber
+        - transporterId
+        - transporterName
+        - originAddress
+        - destinationAddress
+        - createdAt
+      properties:
+        id:
+          type: string
+        trackingNumber:
+          type: string
+        status:
+          $ref: "#/components/schemas/ShipmentStatus"
+        orderId:
+          type: string
+        orderNumber:
+          type: string
+        transporterId:
+          type: string
+        transporterName:
+          type: string
+        transporterCompany:
+          type: string
+          nullable: true
+        shopkeeperName:
+          type: string
+          nullable: true
+        shopkeeperCompany:
+          type: string
+          nullable: true
+        shopkeeperPhone:
+          type: string
+          nullable: true
+        manufacturerName:
+          type: string
+          nullable: true
+        manufacturerCompany:
+          type: string
+          nullable: true
+        manufacturerPhone:
+          type: string
+          nullable: true
+        originAddress:
+          type: string
+        destinationAddress:
+          type: string
+        pickupDate:
+          type: string
+          format: date-time
+          nullable: true
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        originLat:
+          type: number
+          nullable: true
+        originLng:
+          type: number
+          nullable: true
+        destLat:
+          type: number
+          nullable: true
+        destLng:
+          type: number
+          nullable: true
+        currentLat:
+          type: number
+          nullable: true
+        currentLng:
+          type: number
+          nullable: true
+        lastLocationAt:
+          type: string
+          format: date-time
+          nullable: true
+        pickupPin:
+          type: string
+          nullable: true
+        deliveryPin:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    UpdateShipmentStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/ShipmentStatus"
+        pin:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    UpdateLocationInput:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+
+    UpdatePaymentInput:
+      type: object
+      properties:
+        upiId:
+          type: string
+          nullable: true
+        bankAccount:
+          type: string
+          nullable: true
+        bankIfsc:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+          nullable: true
+
+    DashboardSummary:
+      type: object
+      required: [role, stats]
+      properties:
+        role:
+          $ref: "#/components/schemas/Role"
+        stats:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatCard"
+
+    StatCard:
+      type: object
+      required: [label, value]
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        sublabel:
+          type: string
+          nullable: true
+
+    ActivityEvent:
+      type: object
+      required: [id, type, title, description, timestamp]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [order_placed, order_accepted, order_rejected, shipment_assigned, shipment_picked_up, shipment_in_transit, shipment_delivered, product_created, user_joined]
+        title:
+          type: string
+        description:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        relatedId:
+          type: string
+          nullable: true
+
+    TopProduct:
+      type: object
+      required: [productId, productName, manufacturerName, unitsSold, revenue]
+      properties:
+        productId:
+          type: string
+        productName:
+          type: string
+        manufacturerName:
+          type: string
+        unitsSold:
+          type: integer
+        revenue:
+          type: number
+        imageUrl:
+          type: string
+          nullable: true
+
+    AdminOverview:
+      type: object
+      required: [totals, ordersByStatus, usersByRole, revenueByCategory]
+      properties:
+        totals:
+          type: object
+          required: [users, products, orders, shipments, revenue]
+          properties:
+            users:
+              type: integer
+            products:
+              type: integer
+            orders:
+              type: integer
+            shipments:
+              type: integer
+            revenue:
+              type: number
+        ordersByStatus:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+        usersByRole:
+          type: array
+          items:
+            type: object
+            required: [role, count]
+            properties:
+              role:
+                type: string
+              count:
+                type: integer
+        revenueByCategory:
+          type: array
+          items:
+            type: object
+            required: [category, revenue]
+            properties:
+              category:
+                type: string
+              revenue:
+                type: number
